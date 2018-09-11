@@ -27,11 +27,12 @@ namespace XML_Batch_Editor.Views
 
         private void InitializeBindings()
         {
-            ViewModel = new VM_Work(this);
+            ViewModel = new VM_Work();
 
             dgvLog.DataSource = ViewModel.Log.ToBindingSource(SynchronizationContext.Current);
             dgvLog.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
+            DataBindings.Add("Text", ViewModel, nameof(ViewModel.Title));
             lblStatus.DataBindings.Add("Text", ViewModel, nameof(ViewModel.LabelStatus));
 
             var names = new[]

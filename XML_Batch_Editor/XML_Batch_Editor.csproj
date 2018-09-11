@@ -8,7 +8,7 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>XML_Batch_Editor</RootNamespace>
     <AssemblyName>XML_Batch_Editor</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>

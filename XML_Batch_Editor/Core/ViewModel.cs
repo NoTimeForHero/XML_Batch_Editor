@@ -13,13 +13,10 @@ namespace XML_Batch_Editor.Core
 {
     public class ViewModel : XObservable
     {
-        public readonly Form View;
-
-        public ViewModel(Form view)
+        public ViewModel()
         {
             // Если мы создаём ViewModel при создании формы, значит текущим контекст синхронизации является UI контекст
             context = SynchronizationContext.Current;
-            View = view;
         }
     }
 

@@ -12,6 +12,19 @@ namespace XML_Batch_Editor.Core
 {
     public static class Extensions
     {
+        public static int Occurencies(this string original, string pattern)
+        {
+            int count = 0;
+            int i = 0;
+            while ((i = original.IndexOf(pattern, i, StringComparison.Ordinal)) != -1)
+            {
+                i += pattern.Length;
+                count++;
+            }
+            return count;
+        }
+
+
         public static void BindCommand<T>(this T invoker, ICommand command) where T : ButtonBase
         {
             T invoker1 = invoker;

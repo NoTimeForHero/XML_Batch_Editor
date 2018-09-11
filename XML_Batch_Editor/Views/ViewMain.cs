@@ -26,7 +26,7 @@ namespace XML_Batch_Editor.Views
 
         private void InitializeBindings()
         {
-            ViewModel = new VM_Main(this);
+            ViewModel = new VM_Main();
 
             chkValidateXSD.DataBindings.Add("Checked", ViewModel, nameof(ViewModel.UseXSD), true, DataSourceUpdateMode.OnPropertyChanged);
 

@@ -88,6 +88,7 @@ namespace XML_Batch_Editor.Controls
         // Запрещаем изменять высоту элемента через код или ручную установку свойства в дизайнере
         protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
         {
+            // BUG: Высота этого компонента не масштабируется при изменении шрифта формы владельца, в отличии от стандартных компонентов
             int currentHeight = tableLayoutPanel1.Height;
             base.SetBoundsCore(x, y, width, currentHeight, specified);
         }

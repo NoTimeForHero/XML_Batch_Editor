@@ -31,6 +31,7 @@ namespace XML_Batch_Editor.Views
         private void InitializeComponent()
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.lblCount = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.chkValidateXSD = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -44,7 +45,6 @@ namespace XML_Batch_Editor.Views
             this.pnlButtons = new System.Windows.Forms.Panel();
             this.btnReplace = new System.Windows.Forms.Button();
             this.btnSearch = new System.Windows.Forms.Button();
-            this.lblCount = new System.Windows.Forms.Label();
             this.cpInputDir = new XML_Batch_Editor.Controls.ControlPath();
             this.cpXSD = new XML_Batch_Editor.Controls.ControlPath();
             this.tableLayoutPanel1.SuspendLayout();
@@ -92,6 +92,15 @@ namespace XML_Batch_Editor.Views
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(659, 325);
             this.tableLayoutPanel1.TabIndex = 0;
+            // 
+            // lblCount
+            // 
+            this.lblCount.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblCount.Location = new System.Drawing.Point(23, 85);
+            this.lblCount.Name = "lblCount";
+            this.lblCount.Size = new System.Drawing.Size(292, 25);
+            this.lblCount.TabIndex = 1000;
+            this.lblCount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // label4
             // 
@@ -230,15 +239,6 @@ namespace XML_Batch_Editor.Views
             this.btnSearch.TabIndex = 30;
             this.btnSearch.Text = "Поиск";
             this.btnSearch.UseVisualStyleBackColor = true;
-            // 
-            // lblCount
-            // 
-            this.lblCount.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblCount.Location = new System.Drawing.Point(23, 85);
-            this.lblCount.Name = "lblCount";
-            this.lblCount.Size = new System.Drawing.Size(292, 25);
-            this.lblCount.TabIndex = 1000;
-            this.lblCount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // cpInputDir
             // 

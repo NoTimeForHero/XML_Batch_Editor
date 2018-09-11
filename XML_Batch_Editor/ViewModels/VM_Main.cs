@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using XML_Batch_Editor.Annotations;
 using XML_Batch_Editor.Core;
-using XML_Batch_Editor.Model;
+using XML_Batch_Editor.Services;
 using XML_Batch_Editor.Views;
 using MessageBox = System.Windows.MessageBox;
 
@@ -28,6 +28,7 @@ namespace XML_Batch_Editor.ViewModels
 
         private string _XPath;
 
+        private bool _NeedReplace;
         private bool _UseRegularExpressions;
         private string _Search;
         private string _Replace;
@@ -35,50 +36,30 @@ namespace XML_Batch_Editor.ViewModels
 
         private readonly ServiceMain serviceMain = ServiceManager.Instance.Resolve<ServiceMain>();
 
-        public VM_Main(Form form) : base(form)
+        public VM_Main()
         {
             OnSearch = new SimpleCommand(x => DoWork(false));
             OnReplace = new SimpleCommand(x => DoWork(true));
 
-           Subscribe(nameof(PathToInputDirectory), () => LabelCount = "Файлов XML в директории: " + serviceMain.FilesCount(PathToInputDirectory));
+            Subscribe(nameof(PathToInputDirectory), () => LabelCount = "Файлов XML в директории: " + serviceMain.FilesCount(PathToInputDirectory));
         }
 
-        private void DoWork(bool Replace)
+        private void DoWork(bool replace)
         {
-            // TODO: WinForms недопустимо вызывать из ViewModel, необходимо понять куда перенести эту ответственность
-            ViewWork work = new ViewWork();
-            var VM = work.ViewModel;
-
-            int currentValue = 0;
-
-            // Возможно для этой задачи стоит заменить INPC вьюмодели с Dispatcher-ом на Timer для формы
-            // Иначе при быстрых задачах в UI поток будет сыпаться огромное количество запросов на обновление UI
-            // Но от этого пострадает читаемость кода, поэтому оставлю пока всё как есть
-            for (int x = 0; x < 5; x++)
-            {
-                int wait = x;
-                Task.Factory.StartNew(async () =>
-                {
-                    await Task.Delay(100*(wait/2));
-
-                    for (int i = 0; i <= 19; i++)
-                    {
-                        VM.pgBarState.Value = Interlocked.Increment(ref currentValue);
-                        VM.LabelStatus = $"Обработано документов: {VM.pgBarState.Value}/{VM.pgBarState.Maximum}";
-
-                        VM.Log.TryAdd($"Hello from thread {Thread.CurrentThread.ManagedThreadId}");
-                        await Task.Delay(100);
-                    }
-                });
-            }
-
-            work.ShowDialog(View);
+            NeedReplace = replace;
+            serviceMain.Convert(this);
         }
 
         #region Reactive Bindings
 
         public SimpleCommand OnSearch { get; set; }
         public SimpleCommand OnReplace { get; set; }
+
+        public bool NeedReplace
+        {
+            get => _NeedReplace;
+            set => RaiseAndSetIfChanged(ref _NeedReplace, value);
+        }
 
         public string LabelCount
         {

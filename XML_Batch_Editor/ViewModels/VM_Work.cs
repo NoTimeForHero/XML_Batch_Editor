@@ -22,12 +22,19 @@ namespace XML_Batch_Editor.ViewModels
             set => RaiseAndSetIfChanged(ref _LabelStatus, value);
         }
 
+        private string _Title;
+        public string Title
+        {
+            get => _Title;
+            set => RaiseAndSetIfChanged(ref _Title, value);
+        }
+
         public ProgressBarState pgBarState { get; }
 
         // ConcurrentQueue для лога выбрана по причине того, что она lock-free
         public ObservableConcurrentQueue<string> Log;
 
-        public VM_Work(Form form) : base(form)
+        public VM_Work()
         {
             Log = new ObservableConcurrentQueue<string>();
             pgBarState = new ProgressBarState {context = context};
