@@ -28,6 +28,8 @@ namespace XML_Batch_Editor.Views
         {
             ViewModel = new VM_Main();
 
+            ViewModel.OnValidation += args => lblErrors.Text = args.ToString();
+
             chkValidateXSD.DataBindings.Add("Checked", ViewModel, nameof(ViewModel.UseXSD), true, DataSourceUpdateMode.OnPropertyChanged);
 
             cpXSD.DataBindings.Add(new Binding("Enabled", ViewModel, nameof(ViewModel.UseXSD)){
@@ -48,6 +50,8 @@ namespace XML_Batch_Editor.Views
 
             btnReplace.BindCommand(ViewModel.OnReplace);
             btnSearch.BindCommand(ViewModel.OnSearch);
+
+            ViewModel.Update();
         }
     }
 }

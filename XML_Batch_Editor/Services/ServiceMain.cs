@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -75,60 +76,49 @@ namespace XML_Batch_Editor.Services
             return result;
         }
 
-        public void Convert(VM_Main main)
+        public async void Convert(VM_Main vmMain, VM_Work vmWork)
         {
-            // TODO: WinForms недопустимо вызывать из ViewModel или сервиса, необходимо понять куда перенести эту ответственность
-            ViewWork work = new ViewWork();
-            var VM = work.ViewModel;
+            var files = Directory.GetFiles(vmMain.PathToInputDirectory, extension).ToList();
 
-            var files = Directory.GetFiles(main.PathToInputDirectory, extension).ToList();
-
-            string outputPath = Path.Combine(main.PathToInputDirectory, outputDirectory);
+            string outputPath = Path.Combine(vmMain.PathToInputDirectory, outputDirectory);
             if (!Directory.Exists(outputPath)) Directory.CreateDirectory(outputPath);
 
             int filesProcessed = 0;
-            VM.pgBarState.Maximum = files.Count;
+            vmWork.pgBarState.Maximum = files.Count;
 
-            Random rnd = new Random();
+            if (vmMain.UseXSD) vmWork.Log.TryAdd($"XSD схема для проверки: {vmMain.PathToXSD}");
+            vmWork.Log.TryAdd($"Поиск по {(vmMain.UseRegularExpressions ? "регулярному выражению" : "подстроке")}: {vmMain.Search}");
+            if (vmMain.NeedReplace) vmWork.Log.TryAdd($"Заменять на: {vmMain.Replace}");
 
-            if (main.UseXSD) VM.Log.TryAdd($"XSD схема для проверки: {main.PathToXSD}");
-            VM.Log.TryAdd($"Поиск по {(main.UseRegularExpressions ? "регулярному выражению" : "подстроке")}: {main.Search}");
-            if (main.NeedReplace) VM.Log.TryAdd($"Заменять на: {main.Replace}");
+            Regex regex = vmMain.UseRegularExpressions ? new Regex(vmMain.Search, RegexOptions.Compiled) : null;
+            String replace = vmMain.NeedReplace ? vmMain.Replace : null;
 
-            Regex regex = main.UseRegularExpressions ? new Regex(main.Search, RegexOptions.Compiled) : null;
-            String replace = main.NeedReplace ? main.Replace : null;
-
-            // Возможно для этой задачи стоит заменить INPC вьюмодели с Dispatcher-ом на Timer для формы
-            // Иначе при быстрых задачах в UI поток будет сыпаться огромное количество запросов на обновление UI
-            // Но от этого пострадает читаемость кода, поэтому оставлю пока всё как есть
+            Stopwatch elapsedTotal = Stopwatch.StartNew();
+            List<Task> tasks = new List<Task>();
             foreach (var file in files)
             {
-                Task.Factory.StartNew(() =>
+                var task = Task.Factory.StartNew(() =>
                 {
+                    Stopwatch elapsed = Stopwatch.StartNew();
                     string filename = Path.GetFileName(file) ?? throw new ArgumentException("Can't get short path for: " + file);
-
-                    int time = rnd.Next(50, 200) + 20 * (filesProcessed % 10);
-                    Thread.Sleep(time);
-                    //await Task.Delay(time);
 
                     XmlDocument xml = new XmlDocument();
                     xml.Load(file);
-                    if (main.UseXSD) xml.Schemas.Add(null, main.PathToXSD);
+                    if (vmMain.UseXSD) xml.Schemas.Add(null, vmMain.PathToXSD);
 
-                    bool success = ConvertFile(xml, main.XPath, main.Search, replace, regex, msg => VM.Log.TryAdd(msg + " " + filename));
+                    bool success = ConvertFile(xml, vmMain.XPath, vmMain.Search, replace, regex, msg => vmWork.Log.TryAdd(msg + " " + filename));
                     if (success) xml.Save(Path.Combine(outputPath, filename));
 
-                    VM.Log.TryAdd($"Документа \"{filename}\" обработан за {time}ms");
-                    VM.pgBarState.Value = Interlocked.Increment(ref filesProcessed);
-                    VM.LabelStatus = $"Обработано документов: {VM.pgBarState.Value}/{VM.pgBarState.Maximum} (через {TaskScheduler.Current.GetType().Name})";
-                }).ContinueWith(task =>
-                {
-                    if (task.Exception != null)
-                        throw task.Exception;
+                    vmWork.Log.TryAdd($"Документ \"{filename}\" обработан за {elapsed.Elapsed}ms");
+                    vmWork.pgBarState.Value = Interlocked.Increment(ref filesProcessed);
+                    vmWork.LabelStatus = $"Обработано документов: {vmWork.pgBarState.Value}/{vmWork.pgBarState.Maximum} (через {TaskScheduler.Current.GetType().Name})";
                 });
+                tasks.Add(task);
             }
 
-            work.ShowDialog();
+            await Task.WhenAll(tasks.ToArray());
+            elapsedTotal.Stop();
+            vmWork.Log.TryAdd($"Суммерное время обработки {files.Count} документов: {elapsedTotal.Elapsed}");
         }
 
     }

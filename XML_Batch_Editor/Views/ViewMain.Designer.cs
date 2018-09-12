@@ -45,6 +45,7 @@ namespace XML_Batch_Editor.Views
             this.pnlButtons = new System.Windows.Forms.Panel();
             this.btnReplace = new System.Windows.Forms.Button();
             this.btnSearch = new System.Windows.Forms.Button();
+            this.lblErrors = new System.Windows.Forms.Label();
             this.cpInputDir = new XML_Batch_Editor.Controls.ControlPath();
             this.cpXSD = new XML_Batch_Editor.Controls.ControlPath();
             this.tableLayoutPanel1.SuspendLayout();
@@ -72,11 +73,12 @@ namespace XML_Batch_Editor.Views
             this.tableLayoutPanel1.Controls.Add(this.textSearch, 1, 9);
             this.tableLayoutPanel1.Controls.Add(this.textReplace, 3, 9);
             this.tableLayoutPanel1.Controls.Add(this.chkRegExp, 1, 10);
-            this.tableLayoutPanel1.Controls.Add(this.pnlButtons, 3, 11);
+            this.tableLayoutPanel1.Controls.Add(this.pnlButtons, 3, 13);
+            this.tableLayoutPanel1.Controls.Add(this.lblErrors, 1, 12);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 13;
+            this.tableLayoutPanel1.RowCount = 15;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -88,9 +90,11 @@ namespace XML_Batch_Editor.Views
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 10F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(659, 325);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(659, 344);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // lblCount
@@ -216,7 +220,7 @@ namespace XML_Batch_Editor.Views
             this.pnlButtons.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlButtons.Controls.Add(this.btnReplace);
             this.pnlButtons.Controls.Add(this.btnSearch);
-            this.pnlButtons.Location = new System.Drawing.Point(386, 271);
+            this.pnlButtons.Location = new System.Drawing.Point(386, 290);
             this.pnlButtons.Margin = new System.Windows.Forms.Padding(0);
             this.pnlButtons.Name = "pnlButtons";
             this.pnlButtons.Size = new System.Drawing.Size(250, 34);
@@ -239,6 +243,17 @@ namespace XML_Batch_Editor.Views
             this.btnSearch.TabIndex = 30;
             this.btnSearch.Text = "Поиск";
             this.btnSearch.UseVisualStyleBackColor = true;
+            // 
+            // lblErrors
+            // 
+            this.tableLayoutPanel1.SetColumnSpan(this.lblErrors, 2);
+            this.lblErrors.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblErrors.ForeColor = System.Drawing.Color.Maroon;
+            this.lblErrors.Location = new System.Drawing.Point(23, 270);
+            this.lblErrors.Name = "lblErrors";
+            this.tableLayoutPanel1.SetRowSpan(this.lblErrors, 2);
+            this.lblErrors.Size = new System.Drawing.Size(312, 54);
+            this.lblErrors.TabIndex = 1001;
             // 
             // cpInputDir
             // 
@@ -271,7 +286,7 @@ namespace XML_Batch_Editor.Views
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(242)))), ((int)(((byte)(242)))), ((int)(((byte)(178)))));
-            this.ClientSize = new System.Drawing.Size(659, 325);
+            this.ClientSize = new System.Drawing.Size(659, 344);
             this.Controls.Add(this.tableLayoutPanel1);
             this.MaximizeBox = false;
             this.Name = "ViewMain";
@@ -302,6 +317,7 @@ namespace XML_Batch_Editor.Views
         private System.Windows.Forms.Button btnReplace;
         private System.Windows.Forms.Button btnSearch;
         private System.Windows.Forms.Label lblCount;
+        private System.Windows.Forms.Label lblErrors;
     }
 }
 

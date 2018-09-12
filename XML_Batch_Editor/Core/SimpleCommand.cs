@@ -19,6 +19,12 @@ namespace XML_Batch_Editor.Core
             _execute = execute;
         }
 
+        public SimpleCommand Subscribe(ViewModel vm)
+        {
+            vm.PropertyChanged += (o, ev) => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            return this;
+        }
+
         public event EventHandler CanExecuteChanged;
 
         public bool CanExecute(object parameter)

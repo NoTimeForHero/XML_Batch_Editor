@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
+using FluentValidation;
+using FluentValidation.Results;
 using XML_Batch_Editor.Annotations;
 using XML_Batch_Editor.Core;
 using XML_Batch_Editor.Services;
@@ -34,12 +36,16 @@ namespace XML_Batch_Editor.ViewModels
         private string _Replace;
         #endregion
 
-        private readonly ServiceMain serviceMain = ServiceManager.Instance.Resolve<ServiceMain>();
+        private readonly ServiceMain serviceMain;
 
         public VM_Main()
         {
-            OnSearch = new SimpleCommand(x => DoWork(false));
-            OnReplace = new SimpleCommand(x => DoWork(true));
+            serviceMain = ServiceManager.Instance.Resolve<ServiceMain>();
+
+            RegisterValidator<VM_Main,ValidatorMain>();
+
+            OnSearch = new SimpleCommand(x => DoWork(false), x => !HaveErrors).Subscribe(this);
+            OnReplace = new SimpleCommand(x => DoWork(true), x => !HaveErrors).Subscribe(this);
 
             Subscribe(nameof(PathToInputDirectory), () => LabelCount = "Файлов XML в директории: " + serviceMain.FilesCount(PathToInputDirectory));
         }
@@ -47,7 +53,11 @@ namespace XML_Batch_Editor.ViewModels
         private void DoWork(bool replace)
         {
             NeedReplace = replace;
-            serviceMain.Convert(this);
+
+            // TODO: WinForms недопустимо вызывать из ViewModel или сервиса, необходимо понять куда перенести эту ответственность
+            ViewWork work = new ViewWork();
+            serviceMain.Convert(this, work.ViewModel);
+            work.ShowDialog();
         }
 
         #region Reactive Bindings
