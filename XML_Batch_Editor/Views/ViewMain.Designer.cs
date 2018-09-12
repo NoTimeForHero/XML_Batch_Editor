@@ -94,7 +94,7 @@ namespace XML_Batch_Editor.Views
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(659, 344);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(659, 369);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // lblCount
@@ -220,7 +220,7 @@ namespace XML_Batch_Editor.Views
             this.pnlButtons.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlButtons.Controls.Add(this.btnReplace);
             this.pnlButtons.Controls.Add(this.btnSearch);
-            this.pnlButtons.Location = new System.Drawing.Point(386, 290);
+            this.pnlButtons.Location = new System.Drawing.Point(386, 315);
             this.pnlButtons.Margin = new System.Windows.Forms.Padding(0);
             this.pnlButtons.Name = "pnlButtons";
             this.pnlButtons.Size = new System.Drawing.Size(250, 34);
@@ -252,7 +252,7 @@ namespace XML_Batch_Editor.Views
             this.lblErrors.Location = new System.Drawing.Point(23, 270);
             this.lblErrors.Name = "lblErrors";
             this.tableLayoutPanel1.SetRowSpan(this.lblErrors, 2);
-            this.lblErrors.Size = new System.Drawing.Size(312, 54);
+            this.lblErrors.Size = new System.Drawing.Size(312, 79);
             this.lblErrors.TabIndex = 1001;
             // 
             // cpInputDir
@@ -286,7 +286,7 @@ namespace XML_Batch_Editor.Views
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(242)))), ((int)(((byte)(242)))), ((int)(((byte)(178)))));
-            this.ClientSize = new System.Drawing.Size(659, 344);
+            this.ClientSize = new System.Drawing.Size(659, 369);
             this.Controls.Add(this.tableLayoutPanel1);
             this.MaximizeBox = false;
             this.Name = "ViewMain";

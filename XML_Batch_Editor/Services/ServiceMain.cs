@@ -39,24 +39,24 @@ namespace XML_Batch_Editor.Services
             XmlElement xRoot = xml.DocumentElement;
             XmlNodeList nodes = xRoot?.SelectNodes(xpath);
 
-            foreach (XmlNode node in nodes)
+            if (nodes != null) foreach (XmlNode node in nodes)
             {
                 if (regex == null)
                 {
                     int nodeOccurences = node.InnerXml.Occurencies(search);
                     count += nodeOccurences;
-                    if (nodeOccurences > 0 && !string.IsNullOrEmpty(replace)) node.InnerXml = node.InnerXml.Replace(search, replace);
+                    if (nodeOccurences > 0 && replace != null) node.InnerXml = node.InnerXml.Replace(search, replace);
                 }
                 else
                 {
                     int nodeOccurences = regex.Matches(node.InnerXml).Count;
                     count += nodeOccurences;
-                    if (nodeOccurences > 0 && !string.IsNullOrEmpty(replace)) node.InnerXml = regex.Replace(node.InnerXml, replace);
+                    if (nodeOccurences > 0 && replace != null) node.InnerXml = regex.Replace(node.InnerXml, replace);
                 }
             }
 
             Log?.Invoke($"Найдено {count} значений в документе");
-            if (string.IsNullOrEmpty(replace)) return true;
+            if (replace == null) return true;
 
             Log?.Invoke("Значения заменены, проверяем документ");
             if (!ValidateXSD(xml))
@@ -86,12 +86,14 @@ namespace XML_Batch_Editor.Services
             int filesProcessed = 0;
             vmWork.pgBarState.Maximum = files.Count;
 
+            vmWork.Log.TryAdd($"Входная директория: {vmMain.PathToInputDirectory}");
+            vmWork.Log.TryAdd($"Выходная директория: {outputPath}");
             if (vmMain.UseXSD) vmWork.Log.TryAdd($"XSD схема для проверки: {vmMain.PathToXSD}");
             vmWork.Log.TryAdd($"Поиск по {(vmMain.UseRegularExpressions ? "регулярному выражению" : "подстроке")}: {vmMain.Search}");
             if (vmMain.NeedReplace) vmWork.Log.TryAdd($"Заменять на: {vmMain.Replace}");
 
             Regex regex = vmMain.UseRegularExpressions ? new Regex(vmMain.Search, RegexOptions.Compiled) : null;
-            String replace = vmMain.NeedReplace ? vmMain.Replace : null;
+            String replace = vmMain.NeedReplace ? (vmMain.Replace ?? "") : null;
 
             Stopwatch elapsedTotal = Stopwatch.StartNew();
             List<Task> tasks = new List<Task>();
@@ -106,8 +108,15 @@ namespace XML_Batch_Editor.Services
                     xml.Load(file);
                     if (vmMain.UseXSD) xml.Schemas.Add(null, vmMain.PathToXSD);
 
-                    bool success = ConvertFile(xml, vmMain.XPath, vmMain.Search, replace, regex, msg => vmWork.Log.TryAdd(msg + " " + filename));
-                    if (success) xml.Save(Path.Combine(outputPath, filename));
+                    try
+                    {
+                        bool success = ConvertFile(xml, vmMain.XPath, vmMain.Search, replace, regex, msg => vmWork.Log.TryAdd(msg + " " + filename));
+                        if (success) xml.Save(Path.Combine(outputPath, filename));
+                    }
+                    catch (XmlException exXml)
+                    {
+                        vmWork.Log.TryAdd($"ОШИБКА: {exXml.Message} в документе {filename}");
+                    }
 
                     vmWork.Log.TryAdd($"Документ \"{filename}\" обработан за {elapsed.Elapsed}ms");
                     vmWork.pgBarState.Value = Interlocked.Increment(ref filesProcessed);
@@ -118,7 +127,7 @@ namespace XML_Batch_Editor.Services
 
             await Task.WhenAll(tasks.ToArray());
             elapsedTotal.Stop();
-            vmWork.Log.TryAdd($"Суммерное время обработки {files.Count} документов: {elapsedTotal.Elapsed}");
+            vmWork.Log.TryAdd($"Суммарное время обработки {files.Count} документов: {elapsedTotal.Elapsed}");
         }
 
     }

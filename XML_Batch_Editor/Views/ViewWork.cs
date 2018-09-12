@@ -18,8 +18,10 @@ namespace XML_Batch_Editor.Views
 {
     public partial class ViewWork : Form
     {
+        public const int recordsPerTick = 10;
         public VM_Work ViewModel;
 
+        private BindingSource binding;
         private DataTable data;
 
         public ViewWork()
@@ -37,7 +39,7 @@ namespace XML_Batch_Editor.Views
             dgvLog.DataSource = new BindingSource {DataSource = data};
 
             Timer timer = new Timer();
-            timer.Interval = 100;
+            timer.Interval = 20;
             timer.Enabled = true;
             timer.Tick += (o, ev) =>
             {
@@ -48,8 +50,9 @@ namespace XML_Batch_Editor.Views
 
                 lblStatus.Text = ViewModel.LabelStatus;
 
-                while (ViewModel.Log.TryDequeue(out string message))
+                for (int records = 0; records < recordsPerTick; records++)
                 {
+                    if (!ViewModel.Log.TryDequeue(out string message)) break;
                     data.Rows.Add(message);
                 }
             };
