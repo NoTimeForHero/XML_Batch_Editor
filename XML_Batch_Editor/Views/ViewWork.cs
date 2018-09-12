@@ -12,12 +12,15 @@ using System.Windows.Forms;
 using XML_Batch_Editor.Core;
 using XML_Batch_Editor.ViewModels;
 using Binding = System.Windows.Forms.Binding;
+using Timer = System.Windows.Forms.Timer;
 
 namespace XML_Batch_Editor.Views
 {
     public partial class ViewWork : Form
     {
         public VM_Work ViewModel;
+
+        private DataTable data;
 
         public ViewWork()
         {
@@ -29,34 +32,28 @@ namespace XML_Batch_Editor.Views
         {
             ViewModel = new VM_Work();
 
-            dgvLog.DataSource = ViewModel.Log.ToBindingSource(SynchronizationContext.Current);
-            dgvLog.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            data = new DataTable();
+            data.Columns.Add();
+            dgvLog.DataSource = new BindingSource {DataSource = data};
 
-            DataBindings.Add("Text", ViewModel, nameof(ViewModel.Title));
-            lblStatus.DataBindings.Add("Text", ViewModel, nameof(ViewModel.LabelStatus));
-
-            var names = new[]
+            Timer timer = new Timer();
+            timer.Interval = 100;
+            timer.Enabled = true;
+            timer.Tick += (o, ev) =>
             {
-                nameof(ViewModel.pgBarState) + "." + nameof(ViewModel.pgBarState.Minimum),
-                nameof(ViewModel.pgBarState) + "." + nameof(ViewModel.pgBarState.Maximum),
-                nameof(ViewModel.pgBarState) + "." + nameof(ViewModel.pgBarState.Value),
-                nameof(ViewModel.pgBarState) + "." + nameof(ViewModel.pgBarState.UnknownValue),
+                pgStatus.Maximum = ViewModel.pgBarState.Maximum;
+                pgStatus.Minimum = ViewModel.pgBarState.Minimum;
+                pgStatus.Value = ViewModel.pgBarState.Value;
+                pgStatus.Style = ViewModel.pgBarState.UnknownValue ? ProgressBarStyle.Marquee : ProgressBarStyle.Blocks;
+
+                lblStatus.Text = ViewModel.LabelStatus;
+
+                while (ViewModel.Log.TryDequeue(out string message))
+                {
+                    data.Rows.Add(message);
+                }
             };
-
-            pgStatus.DataBindings.Add("Minimum", ViewModel, names[0]);
-            pgStatus.DataBindings.Add("Maximum", ViewModel, names[1]);
-            pgStatus.DataBindings.Add("Value", ViewModel, names[2]);
-
-            var bindingStyle = new Binding("Style", ViewModel, names[3]);
-            bindingStyle.Format += ConvertProgressStyle;
-            bindingStyle.Parse += ConvertProgressStyle;
-            pgStatus.DataBindings.Add(bindingStyle);
-        }
-
-        private void ConvertProgressStyle(object sender, ConvertEventArgs e)
-        {
-            if (!(e.Value is bool isInderterminated)) return;
-            e.Value = isInderterminated ? ProgressBarStyle.Marquee : ProgressBarStyle.Blocks;
+            timer.Start();
         }
     }
 }
