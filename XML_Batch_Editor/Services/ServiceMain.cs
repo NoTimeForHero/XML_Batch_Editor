@@ -21,14 +21,14 @@ namespace XML_Batch_Editor.Services
     {
         private static readonly string extension = "*.xml";
         private static readonly string outputDirectory = "OUT";
-        private static readonly Regex regexAttribute = new Regex("(^[a-zA-Zа-яА-Я][^=\\W]+)=\\\"([^\"]+)\\\"", RegexOptions.Compiled);
+        private static readonly Regex regexAttribute = new Regex("(^[a-zA-Zа-яА-Я][^=\\W]+)=\\\"(.*)\\\"", RegexOptions.Compiled);
 
         public int FilesCount(string path)
         {
             return Directory.GetFiles(path, extension).ToList().Count;
         }
 
-        private bool ConvertFile(XmlDocument xml, string xpath, string search, string replace=null, Regex regex=null, Action<string>Log=null)
+        private bool ConvertFile(XmlDocument xml, string xpath, string search, string replace=null, Regex regex=null, string attributeToSearch=null, Action<string>Log=null)
         {
             if (!ValidateXSD(xml))
             {
@@ -40,40 +40,20 @@ namespace XML_Batch_Editor.Services
             XmlElement xRoot = xml.DocumentElement;
             XmlNodeList nodes = xRoot?.SelectNodes(xpath);
 
-            string attributeToSearch = null;
-            var match = regexAttribute.Match(search);
-            if (match.Success && match.Groups.Count == 3)
-            {
-                attributeToSearch = match.Groups[1].Value;
-                search = match.Groups[2].Value;
-            }
-
             if (nodes != null) foreach (XmlNode node in nodes)
             {
                 if (node.Attributes == null) continue;
 
-                if (regex == null)
+                foreach (XmlAttribute attr in node.Attributes)
                 {
-                    foreach(XmlAttribute attr in node.Attributes)
-                    {
-                        if (attributeToSearch != null && !attr.Name.Equals(attributeToSearch)) continue;
+                    if (attributeToSearch != null && !attr.Name.Equals(attributeToSearch)) continue;
 
-                        int nodeOccurences = attr.Value.Occurencies(search);
-                        if (nodeOccurences < 1) continue;
-                        count += nodeOccurences;
-                        if (replace != null) attr.Value = attr.Value.Replace(search, replace);
-                    }
-                }
-                else
-                {
-                    foreach (XmlAttribute attr in node.Attributes)
-                    {
-                        if (attributeToSearch != null && !attr.Name.Equals(attributeToSearch)) continue;
+                    int nodeOccurences = regex?.Matches(attr.Value).Count ?? attr.Value.Occurencies(search);
+                    count += nodeOccurences;
 
-                        int nodeOccurences = regex.Matches(attr.Value).Count;
-                        if (nodeOccurences < 1) continue;
-                        count += nodeOccurences;
-                        if (replace != null) attr.Value = regex.Replace(attr.Value, replace);
+                    if (replace != null)
+                    {
+                        attr.Value = regex?.Replace(attr.Value, replace) ?? attr.Value.Replace(search, replace);
                     }
                 }
             }
@@ -97,6 +77,17 @@ namespace XML_Batch_Editor.Services
             if (xml.Schemas.Count < 1) return true;
             xml.Validate((o, ev) => result = false);
             return result;
+        }
+
+        private void getAttributeToSearch(ref string search, out string attributeToSearch)
+        {
+            attributeToSearch = null;
+            var match = regexAttribute.Match(search);
+            if (match.Success && match.Groups.Count == 3)
+            {
+                attributeToSearch = match.Groups[1].Value;
+                search = match.Groups[2].Value;
+            }
         }
 
         private string logSearchLine(bool isRegex, string search)
@@ -131,7 +122,11 @@ namespace XML_Batch_Editor.Services
             vmWork.Log.TryAdd(logSearchLine(vmMain.UseRegularExpressions, vmMain.Search));
             if (vmMain.NeedReplace) vmWork.Log.TryAdd($"Заменять на: {vmMain.Replace}");
 
-            Regex regex = vmMain.UseRegularExpressions ? new Regex(vmMain.Search, RegexOptions.Compiled) : null;
+            string search = vmMain.Search;
+            getAttributeToSearch(ref search, out string attributeToSearch);
+
+            Regex regex = vmMain.UseRegularExpressions ? new Regex(search, RegexOptions.Compiled) : null;
+
             String replace = vmMain.NeedReplace ? (vmMain.Replace ?? "") : null;
 
             Stopwatch elapsedTotal = Stopwatch.StartNew();
@@ -149,7 +144,7 @@ namespace XML_Batch_Editor.Services
                         xml.Load(file);
                         if (vmMain.UseXSD) xml.Schemas.Add(null, vmMain.PathToXSD);
 
-                        bool success = ConvertFile(xml, vmMain.XPath, vmMain.Search, replace, regex, msg => vmWork.Log.TryAdd(msg + " " + filename));
+                        bool success = ConvertFile(xml, vmMain.XPath, search, replace, regex, attributeToSearch, msg => vmWork.Log.TryAdd(msg + " " + filename));
                         if (success && vmMain.NeedReplace) xml.Save(Path.Combine(outputPath, filename));
                     }
                     catch (XmlException ex)
