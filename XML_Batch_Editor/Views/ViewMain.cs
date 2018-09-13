@@ -16,7 +16,7 @@ namespace XML_Batch_Editor.Views
 {
     public partial class ViewMain : Form
     {
-        private VM_Main ViewModel;
+        public VM_Main ViewModel;
 
         public ViewMain()
         {

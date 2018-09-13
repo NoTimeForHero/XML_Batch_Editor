@@ -23,7 +23,9 @@ namespace XML_Batch_Editor
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ViewMain());
+
+            ViewMain main = new ViewMain();
+            Application.Run(main);
         }
     }
 }
