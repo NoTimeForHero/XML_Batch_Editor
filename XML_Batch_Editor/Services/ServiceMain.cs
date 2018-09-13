@@ -21,20 +21,16 @@ namespace XML_Batch_Editor.Services
     {
         private static readonly string extension = "*.xml";
         private static readonly string outputDirectory = "OUT";
-        private static readonly Regex regexAttribute = new Regex("(^[a-zA-Zа-яА-Я][^=\\W]+)=\\\"(.*)\\\"", RegexOptions.Compiled);
+        public static readonly Regex regexAttribute = new Regex("(^[a-zA-Zа-яА-Я][^=\\W]+)=\\\"(.*)\\\"", RegexOptions.Compiled);
 
         public int FilesCount(string path)
         {
             return Directory.GetFiles(path, extension).ToList().Count;
         }
 
-        private bool ConvertFile(XmlDocument xml, string xpath, string search, string replace=null, Regex regex=null, string attributeToSearch=null, Action<string>Log=null)
+        public Tuple<int,IList<XmlAttribute>> Search(XmlDocument xml, string xpath, string search, Regex regex=null, string attributeToSearch=null)
         {
-            if (!ValidateXSD(xml))
-            {
-                Log?.Invoke("ОШИБКА: Документ не соответствует XSD схеме");
-                return false;
-            }
+            List<XmlAttribute> attributes = new List<XmlAttribute>();
 
             int count = 0;
             XmlElement xRoot = xml.DocumentElement;
@@ -51,24 +47,21 @@ namespace XML_Batch_Editor.Services
                     int nodeOccurences = regex?.Matches(attr.Value).Count ?? attr.Value.Occurencies(search);
                     count += nodeOccurences;
 
-                    if (replace != null)
-                    {
-                        attr.Value = regex?.Replace(attr.Value, replace) ?? attr.Value.Replace(search, replace);
-                    }
+                    if (nodeOccurences > 0) attributes.Add(attr);
                 }
             }
 
-            Log?.Invoke($"Найдено {count} значений в документе");
-            if (replace == null) return true;
+            return new Tuple<int, IList<XmlAttribute>>(count, attributes);
+        }
 
-            Log?.Invoke("Значения заменены, проверяем документ");
-            if (!ValidateXSD(xml))
+        public void Replace(XmlDocument xml, IList<XmlAttribute> attributes, string search, string replace, Regex regex = null)
+        {
+            if (!ValidateXSD(xml)) throw new ArgumentException("ОШИБКА: После замены документ не соответствует XSD схеме");
+
+            foreach (XmlAttribute attr in attributes)
             {
-                Log?.Invoke("ОШИБКА: После замены документ не соответствует XSD схеме");
-                return false;
+                attr.Value = regex?.Replace(attr.Value, replace) ?? attr.Value.Replace(search, replace);
             }
-
-            return true;
         }
 
         private bool ValidateXSD(XmlDocument xml)
@@ -90,16 +83,8 @@ namespace XML_Batch_Editor.Services
             }
         }
 
-        private string logSearchLine(bool isRegex, string search)
+        private string logSearchLine(bool isRegex, string search, string attributeToSearch)
         {
-            string attributeToSearch = null;
-            var match = regexAttribute.Match(search);
-            if (match.Success && match.Groups.Count == 3)
-            {
-                attributeToSearch = match.Groups[1].Value;
-                search = match.Groups[2].Value;
-            }
-
             string searchAttr = attributeToSearch == null ? "любого аттрибута" : $"аттрибута с именем \"{attributeToSearch}\"";
             string searchType = isRegex ? "регулярному выражению" : "подстроке";
 
@@ -116,18 +101,16 @@ namespace XML_Batch_Editor.Services
             int filesProcessed = 0;
             vmWork.pgBarState.Maximum = files.Count;
 
+            string search = vmMain.Search;
+            getAttributeToSearch(ref search, out string attributeToSearch);
+            Regex regex = vmMain.UseRegularExpressions ? new Regex(search, RegexOptions.Compiled) : null;
+            String replace = vmMain.NeedReplace ? (vmMain.Replace ?? "") : null;
+
             vmWork.Log.TryAdd($"Входная директория: {vmMain.PathToInputDirectory}");
             vmWork.Log.TryAdd($"Выходная директория: {outputPath}");
             if (vmMain.UseXSD) vmWork.Log.TryAdd($"XSD схема для проверки: {vmMain.PathToXSD}");
-            vmWork.Log.TryAdd(logSearchLine(vmMain.UseRegularExpressions, vmMain.Search));
+            vmWork.Log.TryAdd(logSearchLine(vmMain.UseRegularExpressions, search, attributeToSearch));
             if (vmMain.NeedReplace) vmWork.Log.TryAdd($"Заменять на: {vmMain.Replace}");
-
-            string search = vmMain.Search;
-            getAttributeToSearch(ref search, out string attributeToSearch);
-
-            Regex regex = vmMain.UseRegularExpressions ? new Regex(search, RegexOptions.Compiled) : null;
-
-            String replace = vmMain.NeedReplace ? (vmMain.Replace ?? "") : null;
 
             Stopwatch elapsedTotal = Stopwatch.StartNew();
             List<Task> tasks = new List<Task>();
@@ -144,8 +127,29 @@ namespace XML_Batch_Editor.Services
                         xml.Load(file);
                         if (vmMain.UseXSD) xml.Schemas.Add(null, vmMain.PathToXSD);
 
-                        bool success = ConvertFile(xml, vmMain.XPath, search, replace, regex, attributeToSearch, msg => vmWork.Log.TryAdd(msg + " " + filename));
-                        if (success && vmMain.NeedReplace) xml.Save(Path.Combine(outputPath, filename));
+                        if (!ValidateXSD(xml))
+                        {
+                            vmWork.Log.TryAdd("ОШИБКА: Документ не соответствует XSD схеме");
+                            goto method_end;
+                        }
+
+                        var result = Search(xml, vmMain.XPath, search, regex, attributeToSearch);
+                        vmWork.Log.TryAdd($"Найдено {result.Item1} значений в документе");
+
+                        if (vmMain.NeedReplace)
+                        {
+                            Replace(xml, result.Item2, search, replace, regex);
+
+                            if (!ValidateXSD(xml))
+                            {
+                                vmWork.Log.TryAdd("ОШИБКА: После замены документ не соответствует XSD схеме");
+                                goto method_end;
+                            }
+
+                            xml.Save(Path.Combine(outputPath, filename));
+                        }
+
+                        method_end:;
                     }
                     catch (XmlException ex)
                     {
